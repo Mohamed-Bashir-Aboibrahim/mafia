@@ -27,7 +27,8 @@
             user-select: none;
         }
 
-        input, select {
+        input,
+        select {
             user-select: auto;
         }
 
@@ -39,7 +40,8 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
-            overscroll-behavior: none; /* Prevents pull-to-refresh */
+            overscroll-behavior: none;
+            /* Prevents pull-to-refresh */
         }
 
         /* Utility Classes */
@@ -486,10 +488,12 @@
             .game-header {
                 padding: 10px;
             }
+
             .btn-restart {
                 font-size: 12px;
                 padding: 0 10px;
             }
+
             .role-input-row span {
                 font-size: 14px;
             }
@@ -509,16 +513,29 @@
     </div>
 
     <!-- Header -->
-    <div id="game-header" class="game-header">
+    <div id="game-header" class="game-header hidden">
         <span style="font-weight: bold; opacity: 0.7;">MAFIA</span>
         <div style="display: flex; gap: 8px;">
             <button class="btn-restart" onclick="goToMainMenu()" style="background-color: #333;">Main Menu</button>
-            <button class="btn-restart" onclick="startAgain()">Start Again</button>
+            <button class="btn-restart" onclick="startAgain()">Replay</button>
+            <button class="btn-restart" onclick="endSession()" style="background-color: #8b0000;">Start Over</button>
+        </div>
+    </div>
+
+    <!-- 0. Landing Screen -->
+    <div id="screen-landing" class="screen active fade-in text-center"
+        style="justify-content: center; align-items: center;">
+        <h1 style="font-size: 48px; margin-bottom: 40px;">MAFIA</h1>
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 20px;">
+            <button class="pulse-btn primary" onclick="startSession(true)"
+                style="min-height: 70px; font-size: 22px;">Play with Points</button>
+            <button class="action-btn" onclick="startSession(false)"
+                style="margin-top:0; min-height: 70px; font-size: 22px;">Play Casual (No Points)</button>
         </div>
     </div>
 
     <!-- 1. Game Setup Screen -->
-    <div id="screen-setup" class="screen active fade-in">
+    <div id="screen-setup" class="screen fade-in">
         <h1>Mafia Setup</h1>
 
         <div class="input-group">
@@ -533,31 +550,31 @@
         <h2>Roles Setup</h2>
         <div id="roles-container">
             <div class="role-input-row">
-                <span class="role-mafia">Mafia</span>
+                <span class="role-mafia">مافيا</span>
                 <input type="number" id="role-mafia" value="1" min="0" onchange="validateSetup()">
             </div>
             <div class="role-input-row">
-                <span class="role-citizen">Citizen</span>
+                <span class="role-citizen">مواطن</span>
                 <input type="number" id="role-citizen" value="3" min="0" onchange="validateSetup()">
             </div>
             <div class="role-input-row">
-                <span class="role-doctor">Doctor</span>
+                <span class="role-doctor">دكتور</span>
                 <input type="number" id="role-doctor" value="1" min="0" onchange="validateSetup()">
             </div>
             <div class="role-input-row">
-                <span class="role-vigilante">Vigilante (القناص)</span>
+                <span class="role-vigilante">قناص</span>
                 <input type="number" id="role-vigilante" value="0" min="0" onchange="validateSetup()">
             </div>
             <div class="role-input-row">
-                <span class="role-mayor">Mayor (العمدة)</span>
+                <span class="role-mayor">عمدة</span>
                 <input type="number" id="role-mayor" value="0" min="0" onchange="validateSetup()">
             </div>
             <div class="role-input-row">
-                <span class="role-consigliere">Consigliere (المخادع)</span>
+                <span class="role-consigliere">مخادع</span>
                 <input type="number" id="role-consigliere" value="0" min="0" onchange="validateSetup()">
             </div>
             <div class="role-input-row">
-                <span class="role-jester">Jester (المجنون)</span>
+                <span class="role-jester">مهرج</span>
                 <input type="number" id="role-jester" value="0" min="0" onchange="validateSetup()">
             </div>
         </div>
@@ -626,11 +643,39 @@
 
         <div class="dashboard-container">
             <h3>Alive Players</h3>
-            <div id="alive-players-list" class="dashboard-card" style="flex:1; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+            <div id="alive-players-list" class="dashboard-card"
+                style="flex:1; overflow-y: auto; -webkit-overflow-scrolling: touch;">
                 <!-- Alive players populated here -->
             </div>
 
-            <button class="action-btn" onclick="goToSleep()">All Close Your Eyes</button>
+            <!-- INLINE VOTING ASSIGNMENT -->
+            <div id="points-assignment-section" class="dashboard-card hidden">
+                <h3 style="color: #fff; margin-bottom: 10px;">Voting Results</h3>
+                <p style="color: #aaa; margin-bottom: 15px; font-size: 14px;">Who correctly identified a Mafia?</p>
+
+                <div id="mayor-ability-group" class="hidden"
+                    style="margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    <h4 style="color: var(--color-mayor); margin-bottom:10px;">Mayor Ability</h4>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <input type="checkbox" id="mayor-used-ability" style="width: 25px; height: 25px;"
+                            onchange="toggleMayorTarget()">
+                        Did the Mayor use his ability?
+                    </label>
+                    <label id="mayor-target-mafia-label" class="hidden"
+                        style="display: flex; align-items: center; gap: 10px; margin-left: 20px; color: #aaa;">
+                        <input type="checkbox" id="mayor-chose-mafia" style="width: 25px; height: 25px;">
+                        Did the Mayor choose a Mafia?
+                    </label>
+                </div>
+
+                <div id="vote-checkboxes" style="margin-bottom: 15px;">
+                    <!-- Checkboxes populated here -->
+                </div>
+                <button class="pulse-btn primary" style="min-height: 45px; font-size: 16px;"
+                    onclick="submitExecutionVotes()">Confirm Points</button>
+            </div>
+
+            <button id="btn-go-to-sleep" class="action-btn" onclick="goToSleep()">All Close Your Eyes</button>
         </div>
     </div>
 
@@ -639,29 +684,69 @@
         <div class="win-card">
             <div id="win-title" class="win-title">MAFIA WINS</div>
             <div id="win-subtitle" class="win-subtitle"></div>
-            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 30px;">
-                <button class="pulse-btn primary" onclick="startGame()">Start Again (Same Setup)</button>
-                <button class="action-btn" style="margin-top: 0; background-color: #333;"
-                    onclick="showScreen('screen-setup')">Main Menu (Change Setup)</button>
+            <div id="gameover-buttons" style="display: flex; flex-direction: column; gap: 15px; margin-top: 30px;">
+                <!-- Dynamically populated based on points mode -->
             </div>
         </div>
     </div>
 
+    <!-- 6. Leaderboard Screen -->
+    <div id="screen-leaderboard" class="screen fade-in">
+        <h1 style="font-size: 40px; margin-bottom: 10px;">🏆 LEADERBOARD</h1>
+        <p class="text-center mb-4" style="color: #ccc;">Session Scores</p>
+        <div class="dashboard-container">
+            <div id="leaderboard-list" class="dashboard-card" style="flex:1; overflow-y: auto;">
+                <!-- Leaderboard entries -->
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 30px;">
+                <button class="pulse-btn primary" onclick="startAgain()">Replay (Same Setup)</button>
+                <button class="action-btn" style="margin-top:0; background-color: #333;" onclick="goToMainMenu()">Main
+                    Menu (Change Setup)</button>
+                <button class="action-btn" style="margin-top:0; background-color: #8b0000;" onclick="endSession()">Start
+                    Over (End Points)</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // --- State Management ---
         let players = [];
         let currentRevealIndex = 0;
+        let isPointsMode = false;
+        let sessionPoints = {}; // { 'PlayerName': totalPoints }
+        let currentGamePoints = {}; // { 'PlayerName': tempPoints }
+        let currentExecutedPlayerId = null;
 
         const roleData = {
-            'mafia': { name: 'Mafia', icon: '🔪', class: 'role-mafia' },
-            'citizen': { name: 'Citizen', icon: '👤', class: 'role-citizen' },
-            'doctor': { name: 'Doctor', icon: '💉', class: 'role-doctor' },
-            'vigilante': { name: 'Vigilante', icon: '🔫', class: 'role-vigilante' },
-            'mayor': { name: 'Mayor', icon: '🎩', class: 'role-mayor' },
-            'consigliere': { name: 'Consigliere', icon: '👁️', class: 'role-consigliere' },
-            'jester': { name: 'Jester', icon: '🤡', class: 'role-jester' }
+            'mafia': { name: 'مافيا', icon: '🔪', class: 'role-mafia' },
+            'citizen': { name: 'مواطن', icon: '👤', class: 'role-citizen' },
+            'doctor': { name: 'دكتور', icon: '💉', class: 'role-doctor' },
+            'vigilante': { name: 'قناص', icon: '🔫', class: 'role-vigilante' },
+            'mayor': { name: 'عمدة', icon: '🎩', class: 'role-mayor' },
+            'consigliere': { name: 'مخادع', icon: '👁️', class: 'role-consigliere' },
+            'jester': { name: 'مهرج', icon: '🤡', class: 'role-jester' }
         };
+
+        // --- Session Logic ---
+        function startSession(pointsMode) {
+            isPointsMode = pointsMode;
+            sessionPoints = {};
+            document.getElementById('game-header').classList.remove('hidden');
+            showScreen('screen-setup');
+        }
+
+        function endSession() {
+            showModal('Start Over', 'Are you sure you want to end this session? All points will be lost.', [
+                { text: 'Cancel', type: 'primary' },
+                {
+                    text: 'End Session', type: 'danger', onClick: () => {
+                        document.getElementById('game-header').classList.add('hidden');
+                        isPointsMode = false;
+                        showScreen('screen-landing');
+                    }
+                }
+            ]);
+        }
 
         // --- Setup Logic ---
         function generatePlayerInputs() {
@@ -735,8 +820,14 @@
                 }
             });
 
-            // Shuffle roles
-            rolePool = rolePool.sort(() => Math.random() - 0.5);
+            // Shuffle roles using Cryptographically Secure Fisher-Yates algorithm
+            for (let i = rolePool.length - 1; i > 0; i--) {
+                const randomBuffer = new Uint32Array(1);
+                window.crypto.getRandomValues(randomBuffer);
+                const cryptoRandom = randomBuffer[0] / (0xffffffff + 1);
+                const j = Math.floor(cryptoRandom * (i + 1));
+                [rolePool[i], rolePool[j]] = [rolePool[j], rolePool[i]];
+            }
 
             // Assign roles
             players.forEach((p, i) => {
@@ -745,6 +836,15 @@
 
             // Track who the doctor has protected this game
             window.doctorProtectedIds = [];
+
+            // Reset current game points
+            currentGamePoints = {};
+            players.forEach(p => {
+                currentGamePoints[p.name] = 0;
+                if (!(p.name in sessionPoints)) {
+                    sessionPoints[p.name] = 0;
+                }
+            });
 
             // Start Reveal Phase
             currentRevealIndex = 0;
@@ -904,13 +1004,28 @@
             }
 
             // Resolve Vigilante Kill
-            if (vigTargetId && vigTargetId !== docTargetId) {
+            if (vigTargetId) {
                 const p = players.find(x => x.id == vigTargetId);
-                if (p && p.isAlive) {
-                    p.isAlive = false;
-                    if (!deaths.includes(p.name)) {
-                        deaths.push(p.name);
-                        flashNeeded = true;
+                if (p) {
+                    if (vigTargetId !== docTargetId && p.isAlive) {
+                        p.isAlive = false;
+                        if (!deaths.includes(p.name)) {
+                            deaths.push(p.name);
+                            flashNeeded = true;
+                        }
+                    }
+                    if (p.role !== 'mafia' && p.role !== 'consigliere') {
+                        const vigPlayer = players.find(x => x.role === 'vigilante');
+                        if (vigPlayer) {
+                            if (isPointsMode && currentGamePoints[vigPlayer.name] !== undefined) {
+                                currentGamePoints[vigPlayer.name] -= 1;
+                            }
+                            vigPlayer.isAlive = false;
+                            if (!deaths.includes(vigPlayer.name)) {
+                                deaths.push(vigPlayer.name);
+                                flashNeeded = true;
+                            }
+                        }
                     }
                 }
             }
@@ -976,9 +1091,119 @@
             ]);
         }
 
+        function toggleMayorTarget() {
+            const used = document.getElementById('mayor-used-ability').checked;
+            const targetLabel = document.getElementById('mayor-target-mafia-label');
+            if (used) {
+                targetLabel.classList.remove('hidden');
+            } else {
+                targetLabel.classList.add('hidden');
+                document.getElementById('mayor-chose-mafia').checked = false;
+            }
+
+            const mayorPlayer = players.find(x => x.role === 'mayor' && x.isAlive);
+            if (mayorPlayer) {
+                const cb = document.querySelector(`.vote-cb[value="${mayorPlayer.id}"]`);
+                if (cb && cb.parentElement) {
+                    if (used) {
+                        cb.checked = false;
+                        cb.parentElement.style.display = 'none';
+                    } else {
+                        cb.parentElement.style.display = 'flex';
+                    }
+                }
+            }
+        }
+
+        function showExecutionVotesInline() {
+            const mayorUsedGroup = document.getElementById('mayor-ability-group');
+            const mayorCheckbox = document.getElementById('mayor-used-ability');
+            const mayorChoseMafia = document.getElementById('mayor-chose-mafia');
+            mayorCheckbox.checked = false;
+            mayorChoseMafia.checked = false;
+            document.getElementById('mayor-target-mafia-label').classList.add('hidden');
+
+            if (hasRoleAlive('mayor')) {
+                mayorUsedGroup.classList.remove('hidden');
+            } else {
+                mayorUsedGroup.classList.add('hidden');
+            }
+
+            const votesContainer = document.getElementById('vote-checkboxes');
+            votesContainer.innerHTML = '';
+
+            const alive = getAlivePlayers().filter(p => p.role !== 'mafia' && p.role !== 'consigliere');
+            alive.forEach(p => {
+                const label = document.createElement('label');
+                label.style.display = 'flex';
+                label.style.alignItems = 'center';
+                label.style.gap = '10px';
+                label.style.marginBottom = '10px';
+                label.style.padding = '10px';
+                label.style.background = 'rgba(255,255,255,0.05)';
+                label.style.borderRadius = '8px';
+
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.value = p.id;
+                cb.className = 'vote-cb';
+                cb.style.width = '20px';
+                cb.style.height = '20px';
+
+                label.appendChild(cb);
+                label.appendChild(document.createTextNode(p.name));
+                votesContainer.appendChild(label);
+            });
+
+            document.getElementById('points-assignment-section').classList.remove('hidden');
+            document.getElementById('btn-go-to-sleep').classList.add('hidden');
+        }
+
+        function submitExecutionVotes() {
+            const checkboxes = document.querySelectorAll('.vote-cb:checked');
+            const voterIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+            const mayorGroupHidden = document.getElementById('mayor-ability-group').classList.contains('hidden');
+            const mayorUsedAbility = !mayorGroupHidden && document.getElementById('mayor-used-ability').checked;
+            const mayorChoseMafia = document.getElementById('mayor-chose-mafia').checked;
+            let mayorPlayer = players.find(x => x.role === 'mayor' && x.isAlive);
+
+            // Give normal +1 points
+            voterIds.forEach(vid => {
+                const voter = players.find(x => x.id == vid);
+                if (voter) {
+                    let ptsToAdd = 1;
+                    // Prevent double-dipping if the Mayor used his designated ability box
+                    if (mayorUsedAbility && mayorPlayer && voter.id === mayorPlayer.id) {
+                        ptsToAdd = 0;
+                    }
+                    currentGamePoints[voter.name] += ptsToAdd;
+                }
+            });
+
+            // Handle Mayor's specific ability points
+            if (mayorUsedAbility && mayorPlayer) {
+                if (mayorChoseMafia) {
+                    currentGamePoints[mayorPlayer.name] += 2;
+                } else {
+                    currentGamePoints[mayorPlayer.name] -= 1;
+                }
+            }
+
+            // Hide the assignment form and show Sleep button
+            document.getElementById('points-assignment-section').classList.add('hidden');
+            document.getElementById('btn-go-to-sleep').classList.remove('hidden');
+        }
+
         function proceedExecution(id) {
             const p = players.find(x => x.id == id);
+            const aliveCountBefore = getAlivePlayers().length;
             p.isAlive = false;
+
+            if (isPointsMode && p.role === 'mafia' && aliveCountBefore === 3) {
+                // Mafia gets +3 if executed when there are exactly 2 other players left
+                currentGamePoints[p.name] += 3;
+            }
 
             document.body.classList.remove('blood-flash');
             void document.body.offsetWidth;
@@ -987,19 +1212,44 @@
             document.getElementById('day-announcement').innerHTML = `<strong style="color:var(--color-mayor)">${p.name}</strong> was executed by the town!`;
             populateDayList();
 
+            let modalTitle = null;
+            let modalMsg = null;
+
             if (p.role === 'jester') {
-                const winTitle = document.getElementById('win-title');
-                const winSubtitle = document.getElementById('win-subtitle');
-                winTitle.innerText = "JESTER WINS! 🤡";
-                winTitle.className = "win-title role-jester";
-                winSubtitle.innerText = `${p.name} tricked the town into executing them!`;
-                showScreen('screen-gameover');
-                return; // Stop further checks
+                modalTitle = 'المهرج فاز! 🤡';
+                modalMsg = `${p.name} خدع الجميع وتم إعدامه!`;
+                if (isPointsMode) {
+                    if (aliveCountBefore === 3) {
+                        currentGamePoints[p.name] -= 1;
+                    } else {
+                        currentGamePoints[p.name] += 2;
+                    }
+                }
+            }
+
+            const nameLower = p.name.toLowerCase();
+            const isBashir = nameLower.includes('bashir') || nameLower.includes('basher') || nameLower.includes('bsheer') || nameLower.includes('bechir') || nameLower.includes('بشير');
+
+            if (isBashir && p.role !== 'mafia') {
+                if (modalTitle) {
+                    modalMsg += '<br><br><strong style="font-size: 22px; color: #ffcc00;">قلتلكو يا شوية شراميط</strong>';
+                } else {
+                    modalTitle = 'رسالة';
+                    modalMsg = '<strong style="font-size: 22px; color: #ffcc00;">قلتلكو يا شوية شراميط</strong>';
+                }
+            }
+
+            if (modalTitle) {
+                showModal(modalTitle, modalMsg, [{ text: 'متابعة اللعبة', type: 'primary' }]);
             }
 
             const gameWon = checkWinConditions();
             if (!gameWon) {
                 document.querySelectorAll('.execute-btn').forEach(btn => btn.style.display = 'none');
+
+                if (isPointsMode) {
+                    showExecutionVotesInline();
+                }
             }
         }
 
@@ -1028,22 +1278,93 @@
                 winTitle.innerText = "CITIZENS WIN! 🏙️";
                 winTitle.className = "win-title role-citizen";
                 winSubtitle.innerText = "The Mafia has been eliminated.";
-                showScreen('screen-gameover');
+                handleGameOver('citizen');
                 return true;
             }
 
-            // 2. Mafia wins: Only 1 Mafia and 2 others (Total 3)
-            // Or standard Mafia parity/outnumbering
-            if ((mafiaCount === 1 && alive.length === 3) || (mafiaCount >= citizenCount)) {
+            // 2. Mafia wins by parity/outnumbering (e.g., 1 Mafia and 1 Citizen)
+            if (mafiaCount > 0 && mafiaCount >= citizenCount) {
                 const mafiaNames = players.filter(p => p.role === 'mafia').map(p => p.name).join(' and ');
                 winTitle.innerText = "MAFIA WINS! 🔪";
                 winTitle.className = "win-title role-mafia";
                 winSubtitle.innerText = `Mafia is ${mafiaNames}`;
-                showScreen('screen-gameover');
+                handleGameOver('mafia');
                 return true;
             }
 
             return false;
+        }
+
+        function handleGameOver(winningTeam) {
+            const btnContainer = document.getElementById('gameover-buttons');
+            btnContainer.innerHTML = '';
+
+            if (isPointsMode) {
+                players.forEach(p => {
+                    if (winningTeam === 'mafia' && p.role === 'mafia') {
+                        currentGamePoints[p.name] += 5;
+                    }
+                    // Persist game points to session
+                    sessionPoints[p.name] += currentGamePoints[p.name];
+                });
+
+                const b1 = document.createElement('button');
+                b1.className = 'pulse-btn primary';
+                b1.innerText = 'View Leaderboard';
+                b1.onclick = () => showLeaderboard();
+
+                btnContainer.appendChild(b1);
+            } else {
+                const b1 = document.createElement('button');
+                b1.className = 'pulse-btn primary';
+                b1.innerText = 'Start Again (Same Setup)';
+                b1.onclick = () => startGame();
+
+                const b2 = document.createElement('button');
+                b2.className = 'action-btn';
+                b2.style.marginTop = '0';
+                b2.style.backgroundColor = '#333';
+                b2.innerText = 'Main Menu (Change Setup)';
+                b2.onclick = () => showScreen('screen-setup');
+
+                btnContainer.appendChild(b1);
+                btnContainer.appendChild(b2);
+            }
+
+            showScreen('screen-gameover');
+        }
+
+        function showLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+
+            // Sort by points descending
+            const sortedPlayers = Object.keys(sessionPoints).sort((a, b) => sessionPoints[b] - sessionPoints[a]);
+
+            sortedPlayers.forEach((name, index) => {
+                const div = document.createElement('div');
+                div.className = 'alive-list-item';
+
+                let medal = '';
+                if (index === 0) medal = '🥇 ';
+                else if (index === 1) medal = '🥈 ';
+                else if (index === 2) medal = '🥉 ';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'alive-name';
+                nameSpan.innerHTML = `${medal}${name}`;
+
+                const ptsSpan = document.createElement('span');
+                ptsSpan.style.fontWeight = 'bold';
+                ptsSpan.style.color = '#fff';
+                ptsSpan.innerText = `${sessionPoints[name]} pts`;
+
+                div.appendChild(nameSpan);
+                div.appendChild(ptsSpan);
+                list.appendChild(div);
+            });
+
+            showScreen('screen-leaderboard');
         }
 
         function showModal(title, message, buttons) {
