@@ -836,6 +836,8 @@
 
             // Track who the doctor has protected this game
             window.doctorProtectedIds = [];
+            window.currentRound = 1;
+            window.jesterWinner = null;
 
             // Reset current game points
             currentGamePoints = {};
@@ -1009,6 +1011,11 @@
                 if (p) {
                     if (vigTargetId !== docTargetId && p.isAlive) {
                         p.isAlive = false;
+
+                        if (isPointsMode && p.role === 'mafia' && window.currentRound === 1) {
+                            currentGamePoints[p.name] -= 1;
+                        }
+
                         if (!deaths.includes(p.name)) {
                             deaths.push(p.name);
                             flashNeeded = true;
@@ -1192,7 +1199,11 @@
 
             // Hide the assignment form and show Sleep button
             document.getElementById('points-assignment-section').classList.add('hidden');
-            document.getElementById('btn-go-to-sleep').classList.remove('hidden');
+
+            const gameWon = checkWinConditions();
+            if (!gameWon) {
+                document.getElementById('btn-go-to-sleep').classList.remove('hidden');
+            }
         }
 
         function proceedExecution(id) {
@@ -1200,9 +1211,14 @@
             const aliveCountBefore = getAlivePlayers().length;
             p.isAlive = false;
 
-            if (isPointsMode && p.role === 'mafia' && aliveCountBefore === 3) {
-                // Mafia gets +3 if executed when there are exactly 2 other players left
-                currentGamePoints[p.name] += 3;
+            if (isPointsMode && p.role === 'mafia') {
+                if (window.currentRound === 1) {
+                    currentGamePoints[p.name] -= 1;
+                }
+                if (aliveCountBefore === 3) {
+                    // Mafia gets +3 if executed when there are exactly 2 other players left
+                    currentGamePoints[p.name] += 3;
+                }
             }
 
             document.body.classList.remove('blood-flash');
@@ -1216,8 +1232,8 @@
             let modalMsg = null;
 
             if (p.role === 'jester') {
-                modalTitle = 'المهرج فاز! 🤡';
-                modalMsg = `${p.name} خدع الجميع وتم إعدامه!`;
+                window.jesterWinner = p.name;
+                // No modal popup needed, we will skip straight to Game Over
                 if (isPointsMode) {
                     if (aliveCountBefore === 3) {
                         currentGamePoints[p.name] -= 1;
@@ -1243,17 +1259,19 @@
                 showModal(modalTitle, modalMsg, [{ text: 'متابعة اللعبة', type: 'primary' }]);
             }
 
-            const gameWon = checkWinConditions();
-            if (!gameWon) {
-                document.querySelectorAll('.execute-btn').forEach(btn => btn.style.display = 'none');
+            document.querySelectorAll('.execute-btn').forEach(btn => btn.style.display = 'none');
 
-                if (isPointsMode) {
-                    showExecutionVotesInline();
-                }
+            if (window.jesterWinner) {
+                checkWinConditions();
+            } else if (isPointsMode) {
+                showExecutionVotesInline();
+            } else {
+                checkWinConditions();
             }
         }
 
         function goToSleep() {
+            window.currentRound++;
             populateNightDropdowns();
 
             // Reset dropdowns
@@ -1266,12 +1284,21 @@
         }
 
         function checkWinConditions() {
+            const winTitle = document.getElementById('win-title');
+            const winSubtitle = document.getElementById('win-subtitle');
+
+            // 0. Jester wins (executed)
+            if (window.jesterWinner) {
+                winTitle.innerText = "JESTER WINS! 🤡";
+                winTitle.className = "win-title role-jester";
+                winSubtitle.innerText = `${window.jesterWinner} fooled everyone!`;
+                handleGameOver('jester');
+                return true;
+            }
+
             const alive = getAlivePlayers();
             const mafiaCount = alive.filter(p => p.role === 'mafia').length;
             const citizenCount = alive.length - mafiaCount;
-
-            const winTitle = document.getElementById('win-title');
-            const winSubtitle = document.getElementById('win-subtitle');
 
             // 1. Citizens find Mafia (All Mafia dead)
             if (mafiaCount === 0) {
